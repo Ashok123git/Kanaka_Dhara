@@ -54,13 +54,16 @@ async def upsert_my_wholesaler_profile(
     wholesaler = result.scalar_one_or_none()
 
     if wholesaler:
-        # Update existing
+        # Update existing - treat omitted optional fields as "do not modify"
         wholesaler.shop_name = body.shop_name
         wholesaler.owner_name = body.owner_name
         wholesaler.mobile = body.mobile
         wholesaler.address = body.address
-        wholesaler.gst_number = body.gst_number
-        wholesaler.pan_number = body.pan_number
+        # Only update GST/PAN if explicitly provided by the client
+        if "gst_number" in body.model_fields_set:
+            wholesaler.gst_number = body.gst_number
+        if "pan_number" in body.model_fields_set:
+            wholesaler.pan_number = body.pan_number
         wholesaler.status = body.status
         wholesaler.trade_credit_days = body.trade_credit_days
         await db.commit()

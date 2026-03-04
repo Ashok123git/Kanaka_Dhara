@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MoreVertical, Pencil } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Pencil, Search } from 'lucide-react';
 import { getTransactionsByContact } from '@/lib/storage';
 import { getContact as getContactApi } from '@/api/contacts';
 import { getOrders as getOrdersApi } from '@/api/orders';
@@ -33,7 +33,7 @@ function balanceFromTransactions(txns: Transaction[]): number {
   }
   return balance;
 }
-import TransactionBubble from '@/components/TransactionBubble';
+import TransactionBubble, { getTransactionTypeLabel } from '@/components/TransactionBubble';
 import TransactionActionMenu from '@/components/TransactionActionMenu';
 import AddTransactionSheet from '@/components/AddTransactionSheet';
 import EditContactSheet from '@/components/EditContactSheet';
@@ -66,6 +66,11 @@ const Chat = () => {
   // Attachment viewer state
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerAttachments, setViewerAttachments] = useState<string[]>([]);
+
+  // Search: icon expands to bar; query filters transactions
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const loadTransactions = useCallback(async () => {
     if (!contactId) return;
@@ -125,6 +130,12 @@ const Chat = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transactions]);
 
+  useEffect(() => {
+    if (searchExpanded) {
+      searchInputRef.current?.focus();
+    }
+  }, [searchExpanded]);
+
   const loadOrders = useCallback(async () => {
     if (!token || !contactId) return;
     try {
@@ -181,9 +192,6 @@ const Chat = () => {
     return groups;
   };
 
-  const transactionGroups = groupTransactionsByDate(transactions);
-  const headerBalance = balanceFromTransactions(transactions);
-
   if (loading || !contact) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[hsl(var(--chat-bg))]">
@@ -192,71 +200,131 @@ const Chat = () => {
     );
   }
 
+  const q = searchQuery.trim().toLowerCase();
+  const filteredTransactions =
+    q === ''
+      ? transactions
+      : transactions.filter((t) => {
+          const typeLabel = getTransactionTypeLabel(t.type, contact.type);
+          const linkedOrder = t.orderId ? orders.find((o) => o.id === t.orderId) : null;
+          const orderNumber = linkedOrder?.orderNumber ?? '';
+          const searchable = [
+            t.notes ?? '',
+            t.paymentMode ?? '',
+            String(t.amount),
+            typeLabel,
+            orderNumber,
+          ]
+            .join(' ')
+            .toLowerCase();
+          return searchable.includes(q);
+        });
+
+  const transactionGroups = groupTransactionsByDate(filteredTransactions);
+  const headerBalance = balanceFromTransactions(filteredTransactions);
+
   return (
     <div className="flex min-h-screen flex-col bg-[hsl(var(--chat-bg))]">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-primary px-2 py-2">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate('/home')}
-            className="p-2 text-primary-foreground hover:bg-primary-foreground/10 rounded-full transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-
-          {/* Avatar */}
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
-            <span className="text-sm font-semibold">{getInitials(contact.name)}</span>
-          </div>
-
-          {/* Contact Info */}
-          <div className="flex-1 min-w-0">
-            <h1 className="font-semibold text-primary-foreground truncate">{contact.name}</h1>
-            <p className="text-xs text-primary-foreground/70">
-              {contact.type === 'customer' ? 'Customer' : 'Supplier'} • {contact.businessType || 'Business'}
-            </p>
-          </div>
-
-          {/* Balance (derived from displayed transactions so header matches list) */}
-          <div className="text-right mr-2">
-            <span
-              className={`text-sm font-bold ${
-                headerBalance > 0
-                  ? 'text-red-300'
-                  : headerBalance < 0
-                  ? 'text-green-300'
-                  : 'text-primary-foreground/70'
-              }`}
-            >
-              {headerBalance !== 0 ? formatCurrency(Math.abs(headerBalance)) : '₹0'}
-            </span>
-            {headerBalance !== 0 && (
-              <p className="text-xs text-primary-foreground/70">
-                {headerBalance > 0 ? 'Due' : 'Advance'}
-              </p>
-            )}
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          {searchExpanded ? (
+            <>
               <button
                 type="button"
-                className="p-2 text-primary-foreground hover:bg-primary-foreground/10 rounded-full transition-colors"
-                aria-label="More options"
+                onClick={() => {
+                  setSearchExpanded(false);
+                  setSearchQuery('');
+                }}
+                className="p-2 text-primary-foreground hover:bg-primary-foreground/10 rounded-full transition-colors flex-shrink-0"
+                aria-label="Close search"
               >
-                <MoreVertical className="h-5 w-5" />
+                <ArrowLeft className="h-5 w-5" />
               </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[10rem]">
-              <DropdownMenuItem
-                className="cursor-pointer"
-                onSelect={() => setIsEditContactSheetOpen(true)}
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="flex-1 min-w-0 py-2 px-3 rounded-xl bg-white text-foreground placeholder:text-muted-foreground border-0 outline-none"
+                aria-label="Search transactions"
+              />
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => navigate('/home')}
+                className="p-2 text-primary-foreground hover:bg-primary-foreground/10 rounded-full transition-colors"
               >
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit contact
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+
+              {/* Avatar */}
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+                <span className="text-sm font-semibold">{getInitials(contact.name)}</span>
+              </div>
+
+              {/* Contact Info */}
+              <div className="flex-1 min-w-0">
+                <h1 className="font-semibold text-primary-foreground truncate">{contact.name}</h1>
+                <p className="text-xs text-primary-foreground/70">
+                  {contact.type === 'customer' ? 'Customer' : 'Supplier'} • {contact.businessType || 'Business'}
+                </p>
+              </div>
+
+              {/* Balance (derived from displayed transactions so header matches list) */}
+              <div className="text-right mr-2">
+                <span
+                  className={`text-sm font-bold ${
+                    headerBalance > 0
+                      ? 'text-red-300'
+                      : headerBalance < 0
+                      ? 'text-green-300'
+                      : 'text-primary-foreground/70'
+                  }`}
+                >
+                  {headerBalance !== 0 ? formatCurrency(Math.abs(headerBalance)) : '₹0'}
+                </span>
+                {headerBalance !== 0 && (
+                  <p className="text-xs text-primary-foreground/70">
+                    {headerBalance > 0 ? 'Due' : 'Advance'}
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSearchExpanded(true)}
+                className="p-2 text-primary-foreground hover:bg-primary-foreground/10 rounded-full transition-colors"
+                aria-label="Search transactions"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="p-2 text-primary-foreground hover:bg-primary-foreground/10 rounded-full transition-colors"
+                    aria-label="More options"
+                  >
+                    <MoreVertical className="h-5 w-5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[10rem]">
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onSelect={() => setIsEditContactSheetOpen(true)}
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit contact
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
         </div>
       </div>
 
@@ -269,6 +337,12 @@ const Chat = () => {
               <p className="text-sm text-muted-foreground mt-1">
                 Tap + to add your first transaction
               </p>
+            </div>
+          </div>
+        ) : filteredTransactions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center py-16">
+            <div className="bg-card rounded-lg px-6 py-4 shadow-sm">
+              <p className="text-muted-foreground">No transactions match your search</p>
             </div>
           </div>
         ) : (

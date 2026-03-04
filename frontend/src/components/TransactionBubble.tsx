@@ -97,6 +97,16 @@ const supplierConfig = {
   },
 };
 
+/** Returns the display label for a transaction type (for search/filter). */
+export function getTransactionTypeLabel(
+  type: string,
+  contactType: 'customer' | 'supplier'
+): string {
+  const config = contactType === 'supplier' ? supplierConfig : customerConfig;
+  const entry = config[type as keyof typeof config];
+  return entry?.label ?? type;
+}
+
 const TransactionBubble = ({ transaction, orders, contactType, onBubbleClick }: TransactionBubbleProps) => {
   const { type, notes, orderId, paymentMode, attachments } = transaction;
   const amount = Number(transaction.amount) || 0;

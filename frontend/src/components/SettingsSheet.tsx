@@ -72,7 +72,8 @@ const SettingsSheet = ({ isOpen, onClose, onSuccess, wholesaler }: SettingsSheet
           ownerName: wholesaler.ownerName,
           mobile: wholesaler.mobile,
           address: wholesaler.address,
-          gstNumber: wholesaler.gstNumber ?? '',
+          gstNumber: wholesaler.gstNumber || undefined,
+          panNumber: wholesaler.panNumber || undefined,
           status: 'active',
           tradeCreditDays: data.tradeCreditDays,
         });
