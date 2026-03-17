@@ -1,0 +1,23 @@
+# ---- Secrets / local config ----
+backend/.env
+.env
+
+# ---- Python ----
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# ---- Node / frontend ----
+frontend/node_modules/
+**/node_modules/
+frontend/node_modules/.vite/
+**/.vite/
+frontend/node_modules/.package-lock.json
+
+# ---- Coverage / reports ----
+frontend/.nyc_output/
+coverage/
+htmlcov/
+

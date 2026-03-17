@@ -1,0 +1,6 @@
+## Enforce consistent line endings across platforms
+* text=auto
+
+## Config files should stay LF (avoid Windows CRLF warnings)
+*.ini text eol=lf
+
