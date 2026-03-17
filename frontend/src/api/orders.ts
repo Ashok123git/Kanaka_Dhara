@@ -68,3 +68,14 @@ export async function updateOrder(token: string, id: string, body: UpdateOrderBo
   })
   return orderFromApi(raw)
 }
+
+/**
+ * Mutable facade for Cypress stubbing (ESM exports are not reliably stub-able).
+ * Example: cy.stub(ordersApi, 'createOrder').rejects(new Error('...'))
+ */
+export const ordersApi = {
+  getOrders,
+  getOrder,
+  createOrder,
+  updateOrder,
+};

@@ -23,13 +23,14 @@ import { updateContact } from '@/api/contacts';
 import { useAuth } from '@/auth/useAuth';
 import { toast } from 'sonner';
 import type { Contact } from '@/types';
+import { gstNumberSchema } from '@/lib/validation';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   mobile: z.string().optional(),
   city: z.string().optional(),
   address: z.string().optional(),
-  gstNumber: z.string().optional(),
+  gstNumber: gstNumberSchema,
   businessType: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -89,6 +90,7 @@ const EditContactSheet = ({ isOpen, onClose, onSuccess, contact }: EditContactSh
         businessType: data.businessType,
         notes: data.notes,
       });
+      toast.success('Contact updated');
       form.reset();
       onSuccess();
       onClose();
@@ -116,7 +118,7 @@ const EditContactSheet = ({ isOpen, onClose, onSuccess, contact }: EditContactSh
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4" data-testid="edit-contact-form">
             <FormField
               control={form.control}
               name="name"
@@ -124,9 +126,9 @@ const EditContactSheet = ({ isOpen, onClose, onSuccess, contact }: EditContactSh
                 <FormItem>
                   <FormLabel>Name *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter name" {...field} />
+                    <Input placeholder="Enter name" data-testid="edit-contact-name" {...field} />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage data-testid="edit-contact-name-error" />
                 </FormItem>
               )}
             />
@@ -232,7 +234,7 @@ const EditContactSheet = ({ isOpen, onClose, onSuccess, contact }: EditContactSh
               >
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1 bg-secondary hover:bg-secondary/90" disabled={submitting}>
+              <Button type="submit" className="flex-1 bg-secondary hover:bg-secondary/90" disabled={submitting} data-testid="edit-contact-submit">
                 {submitting ? 'Saving...' : 'Save changes'}
               </Button>
             </div>

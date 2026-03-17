@@ -1,0 +1,12 @@
+{
+  "include": ["src/**/*.{ts,tsx}"],
+  "exclude": [
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/node_modules/**",
+    "src/vite-env.d.ts",
+    "**/*.cy.*"
+  ],
+  "reporter": ["html", "text-summary"],
+  "report-dir": "coverage"
+}

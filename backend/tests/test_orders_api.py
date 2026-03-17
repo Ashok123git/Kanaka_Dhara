@@ -180,3 +180,143 @@ async def test_list_orders_filter_by_contact(api_client: AsyncClient) -> None:
     assert r.status_code == 200
     assert len(r.json()) == 1
     assert r.json()[0]["contact_id"] == contact_id_1
+
+
+@pytest.mark.asyncio
+async def test_create_order_duplicate_order_number_400(api_client: AsyncClient) -> None:
+    cr = await api_client.post(
+        "/api/v1/contacts/",
+        json={"type": "customer", "name": "C", "mobile": "+919876543240"},
+    )
+    cid = cr.json()["id"]
+    await api_client.post(
+        "/api/v1/orders/",
+        json={
+            "contact_id": cid,
+            "order_number": "ORD-DUP",
+            "date": "2025-03-01",
+            "total_value": 100,
+            "status": "open",
+        },
+    )
+    r = await api_client.post(
+        "/api/v1/orders/",
+        json={
+            "contact_id": cid,
+            "order_number": "ORD-DUP",
+            "date": "2025-03-01",
+            "total_value": 200,
+            "status": "open",
+        },
+    )
+    assert r.status_code == 400
+    assert "order" in r.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_update_order_contact_not_found_400(api_client: AsyncClient) -> None:
+    cr = await api_client.post(
+        "/api/v1/contacts/",
+        json={"type": "customer", "name": "C", "mobile": "+919876543241"},
+    )
+    cid = cr.json()["id"]
+    orr = await api_client.post(
+        "/api/v1/orders/",
+        json={
+            "contact_id": cid,
+            "order_number": "ORD-U",
+            "date": "2025-03-01",
+            "total_value": 100,
+            "status": "open",
+        },
+    )
+    oid = orr.json()["id"]
+    r = await api_client.put(
+        f"/api/v1/orders/{oid}",
+        json={"contact_id": "00000000-0000-0000-0000-000000000000", "status": "open"},
+    )
+    assert r.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_create_order_422_invalid_status(api_client: AsyncClient) -> None:
+    cr = await api_client.post(
+        "/api/v1/contacts/",
+        json={"type": "customer", "name": "C", "mobile": "+919876543242"},
+    )
+    r = await api_client.post(
+        "/api/v1/orders/",
+        json={
+            "contact_id": cr.json()["id"],
+            "order_number": "O",
+            "date": "2025-03-01",
+            "total_value": 100,
+            "status": "invalid",
+        },
+    )
+    assert r.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_list_orders_filter_by_status(api_client: AsyncClient) -> None:
+    cr = await api_client.post(
+        "/api/v1/contacts/",
+        json={"type": "customer", "name": "C", "mobile": "+919876543243"},
+    )
+    cid = cr.json()["id"]
+    await api_client.post(
+        "/api/v1/orders/",
+        json={
+            "contact_id": cid,
+            "order_number": "O1",
+            "date": "2025-03-01",
+            "total_value": 100,
+            "status": "open",
+        },
+    )
+    await api_client.post(
+        "/api/v1/orders/",
+        json={
+            "contact_id": cid,
+            "order_number": "O2",
+            "date": "2025-03-01",
+            "total_value": 100,
+            "status": "closed",
+        },
+    )
+    r = await api_client.get("/api/v1/orders/?status=closed")
+    assert r.status_code == 200
+    assert all(o["status"] == "closed" for o in r.json())
+
+
+@pytest.mark.asyncio
+async def test_create_order_unhandled_value_error_propagates(
+    api_client: AsyncClient,
+    test_session_and_wholesaler_id,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Service raising ValueError other than contact/order duplicate propagates (500 or exception)."""
+    from api.v1 import orders as orders_module
+
+    async def mock_create(*args, **kwargs):
+        raise ValueError("unknown_error")
+
+    monkeypatch.setattr(orders_module.OrderService, "create_order", mock_create)
+    cr = await api_client.post(
+        "/api/v1/contacts/",
+        json={"type": "customer", "name": "C", "mobile": "+919876543260"},
+    )
+    try:
+        r = await api_client.post(
+            "/api/v1/orders/",
+            json={
+                "contact_id": cr.json()["id"],
+                "order_number": "O",
+                "date": "2025-03-01",
+                "total_value": 100,
+                "status": "open",
+            },
+        )
+        assert r.status_code == 500
+    except ValueError:
+        pass

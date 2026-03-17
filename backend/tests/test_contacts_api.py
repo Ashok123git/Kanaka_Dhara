@@ -119,3 +119,28 @@ async def test_list_contacts_filter_by_type(api_client: AsyncClient) -> None:
     assert r.status_code == 200
     assert all(c["type"] == "customer" for c in r.json())
     assert len(r.json()) == 1
+
+
+@pytest.mark.asyncio
+async def test_create_contact_422_invalid_type(api_client: AsyncClient) -> None:
+    r = await api_client.post(
+        "/api/v1/contacts/",
+        json={"type": "invalid", "name": "X", "mobile": "+919999999999"},
+    )
+    assert r.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_contact_422_empty_name(api_client: AsyncClient) -> None:
+    r = await api_client.post(
+        "/api/v1/contacts/",
+        json={"type": "customer", "name": ""},
+    )
+    assert r.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_list_contacts_403_no_wholesaler(api_client_user_no_wholesaler: AsyncClient) -> None:
+    r = await api_client_user_no_wholesaler.get("/api/v1/contacts/")
+    assert r.status_code == 403
+    assert "wholesaler" in r.json()["detail"].lower()

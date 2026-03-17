@@ -21,3 +21,47 @@ frontend/.nyc_output/
 coverage/
 htmlcov/
 
+backend/uploads/transactions/6ee76d72-cc18-4c6b-9753-ff4bb03db186/b327308a9c2a496aa961733da5b6001d.pdf
+backend/uploads/transactions/08c11765-6cd3-4ecd-a87b-aa0834797deb/22c5992e17234a2fbf170cd5c98ae9a7.pdf
+backend/uploads/transactions/0e6b84b0-0f5a-4ae0-9208-480c45ea5872/6f0942b11fdb430988c9234edfb2074c.pdf
+backend/uploads/transactions/19a22491-09cd-4dcc-bc75-36e495522be2/d191b4ff064646e4a304f24c948a3482.pdf
+backend/uploads/transactions/1c2724f5-513e-41a6-a935-ea7e39fd2dcf/cd55e7acf9bd491694816f18fc67254e.pdf
+backend/uploads/transactions/374c1443-382e-43f6-9a39-5de17ad6cb20/a5cebea707774b3eba518595ab6db618.pdf
+backend/uploads/transactions/64d8590f-7866-44cd-b823-8d5220f072c5/dbdfec07f26d40b0ba90f52e7f84d65f.pdf
+backend/uploads/transactions/75f25c28-ed5e-4f6d-b2dc-41b43bfb8692/3d47c4a527e84768a82c5226ba71fa25.pdf
+backend/uploads/transactions/7b6e3457-7354-4802-942f-574e025fe738/50fb2187f6844b2da2c697f004130e11.pdf
+backend/uploads/transactions/8442dcf0-d6e2-4dcf-9a6c-3febee019e85/d18431415eac40c8a5e7a980137b50f9.pdf
+backend/uploads/transactions/8713747b-6644-43f4-a66a-d92e84d194e4/4ba5c2efac3a4fcdad6e7c3921e7d764.pdf
+backend/uploads/transactions/8cff29c6-b7f7-4507-b12f-5a83fdc7c5d9/446a6cb57d1844ed860a40ea38cbc81b.pdf
+backend/uploads/transactions/c2d18d0f-8418-465b-a808-b9956e17042b/730046acab8a41ffbd37bf8b211fca95.pdf
+backend/uploads/transactions/d0358736-27f9-4ebf-b9af-6aee57e018ad/d97f3cdc7d3e4502a09621680f57e240.pdf
+backend/uploads/transactions/e9ceba21-8c4d-479b-bd3f-b26bf014778b/df1f5e3d93c1400fb9865259c1a91c34.pdf
+backend/uploads/transactions/ebe5b45a-e869-44c2-b7f6-fa289d932866/35e2438bd9c94b76b701ba4b01dc8dd5.pdf
+backend/uploads/transactions/ffacb2c9-7d8b-4334-a1de-8d88f2115b62/43dcc53f03f5452c8141bfd72e67954e.pdf
+frontend/cypress/fixtures/valid-file.pdf
+frontend/cypress/screenshots/api/transactions.cy.ts/Transactions API (getTransaction, uploadTransactionAttachment) -- uploadTransactionAttachment -- POSTs to apiv1transactionsidattachments with FormData and returns parsed JSON on success (failed) (1).png
+frontend/cypress/screenshots/api/transactions.cy.ts/Transactions API (getTransaction, uploadTransactionAttachment) -- uploadTransactionAttachment -- POSTs to apiv1transactionsidattachments with FormData and returns parsed JSON on success (failed) (2).png
+frontend/cypress/screenshots/api/transactions.cy.ts/Transactions API (getTransaction, uploadTransactionAttachment) -- uploadTransactionAttachment -- POSTs to apiv1transactionsidattachments with FormData and returns parsed JSON on success (failed) (3).png
+frontend/cypress/screenshots/api/transactions.cy.ts/Transactions API (getTransaction, uploadTransactionAttachment) -- uploadTransactionAttachment -- POSTs to apiv1transactionsidattachments with FormData and returns parsed JSON on success (failed) (4).png
+frontend/cypress/screenshots/api/transactions.cy.ts/Transactions API (getTransaction, uploadTransactionAttachment) -- uploadTransactionAttachment -- POSTs to apiv1transactionsidattachments with FormData and returns parsed JSON on success (failed) (5).png
+frontend/cypress/screenshots/api/transactions.cy.ts/Transactions API (getTransaction, uploadTransactionAttachment) -- uploadTransactionAttachment -- POSTs to apiv1transactionsidattachments with FormData and returns parsed JSON on success (failed).png
+frontend/cypress/screenshots/api/unauthorized.cy.ts/401 Unauthorized -- redirects to login and clears token when protected GET returns 401 and refresh fails (failed).png
+frontend/cypress/screenshots/chat/ledger.cy.ts/Chat ledger page -- adds a new payment transaction and updates the header balance (failed) (1).png
+frontend/cypress/screenshots/chat/ledger.cy.ts/Chat ledger page -- adds a new payment transaction and updates the header balance (failed).png
+frontend/cypress/screenshots/cypress/component/AddTransactionSheet.cy.tsx/AddTransactionSheet (component) -- Business Logic Branching -- local storage fallback token null updates contact balance via getContacts + updateContact (failed).png
+frontend/cypress/screenshots/cypress/component/AddTransactionSheet.cy.tsx/AddTransactionSheet (component) -- Business Logic Branching -- sets order.discount and closes order for order_closed (failed).png
+frontend/cypress/screenshots/cypress/component/AddTransactionSheet.cy.tsx/AddTransactionSheet (component) -- Business Logic Branching -- updates order.paidAmount for payment_received (and calls updateOrder + saveOrders) (failed).png
+frontend/cypress/screenshots/cypress/component/AddTransactionSheet.cy.tsx/AddTransactionSheet (component) -- Business Logic Branching -- updates order.returnedValue for goods_returned (failed).png
+frontend/cypress/screenshots/cypress/component/AddTransactionSheet.cy.tsx/AddTransactionSheet (component) -- UI States -- isSubmitting disables Save button and shows Saving... while request is in-flight (failed).png
+frontend/cypress/screenshots/office/settings.cy.ts/Office settings updates and persistence -- GST and PAN validation on Account sheet -- saves Account with valid GST and PAN (failed).png
+frontend/cypress/screenshots/office/settings.cy.ts/Office settings updates and persistence -- GST and PAN validation on Account sheet -- shows GST validation error and does not call API when GST is invalid in Account (failed).png
+frontend/cypress/screenshots/office/settings.cy.ts/Office settings updates and persistence -- GST and PAN validation on Account sheet -- shows PAN validation error and does not call API when PAN is invalid in Account (failed).png
+frontend/cypress/screenshots/office/settings.cy.ts/Office settings updates and persistence -- updates account details and reflects the new shop name in the Home header (failed).png
+frontend/cypress/screenshots/office/settings.cy.ts/Office settings updates and persistence -- updates trade credit days in settings and persists to storage (failed).png
+frontend/cypress/screenshots/office/settings.cy.ts/saves Account with valid GST and PAN -- after all hook collectBackendCoverage (failed).png
+frontend/cypress/screenshots/storage.cy.ts/Storage (getContacts, saveContacts, addContact, updateContact, getTransactions) -- getContacts() -- parses stored contact data and converts createdAt and lastActivity to Date (failed).png
+frontend/cypress/screenshots/storage.cy.ts/Storage (getContacts, saveContacts, addContact, updateContact, getTransactions) -- saveContacts() -- saved contacts can be retrieved via getContacts with date conversion (failed).png
+frontend/cypress/screenshots/storage.cy.ts/Storage (getContacts, saveContacts, addContact, updateContact, getTransactions) -- getTransactions() -- parses stored transaction data and converts date and createdAt to Date (failed).png
+backend/.coverage
+.cursor/debug-478e7b.log
+.cursor/debug-0180ce.log

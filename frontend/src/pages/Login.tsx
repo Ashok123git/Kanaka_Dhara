@@ -215,7 +215,11 @@ export function Login() {
                 : `We sent a 6-digit code to ${fullPhone}`}
             </p>
             {devOtp && (
-              <p className="text-xs text-primary font-mono mt-2 bg-primary/10 rounded-lg py-2 px-3" role="status">
+              <p
+                className="text-xs text-primary font-mono mt-2 bg-primary/10 rounded-lg py-2 px-3"
+                role="status"
+                data-testid="dev-otp"
+              >
                 Your OTP: {devOtp}
               </p>
             )}
@@ -226,7 +230,9 @@ export function Login() {
               {otpDigits.map((d: string, i: number) => (
                 <input
                   key={i}
-                  ref={(el: HTMLInputElement | null) => { otpInputRefs.current[i] = el }}
+                  ref={(el: HTMLInputElement | null) => {
+                    otpInputRefs.current[i] = el
+                  }}
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
@@ -235,11 +241,12 @@ export function Login() {
                   onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => handleOtpKeyDown(i, e)}
                   className="w-11 h-12 rounded-lg border-2 border-input text-center text-lg font-medium text-foreground focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   aria-label={`Digit ${i + 1}`}
+                  data-testid={`otp-input-${i}`}
                 />
               ))}
             </div>
             {error && (
-              <p className="text-sm text-red-600 text-center" role="alert">
+              <p className="text-sm text-red-600 text-center" role="alert" data-testid="otp-error">
                 {error}
               </p>
             )}
@@ -247,6 +254,7 @@ export function Login() {
               type="submit"
               disabled={!canVerifyOtp}
               className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              data-testid="verify-otp-button"
             >
               {loading ? 'Verifying…' : 'Verify OTP'}
             </button>
@@ -332,6 +340,7 @@ export function Login() {
                 setError(null)
               }}
               className="w-full h-12 rounded-lg border-2 border-input px-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              data-testid="phone-input"
             />
             {phoneValidationError && (
               <p className="text-sm text-red-600 mt-1" role="alert">
@@ -350,6 +359,7 @@ export function Login() {
             type="submit"
             disabled={!canSendOtp}
             className="w-full h-12 rounded-lg bg-primary text-primary-foreground font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            data-testid="send-otp-button"
           >
             {loading ? 'Sending…' : 'Send OTP'}
           </button>

@@ -83,6 +83,11 @@ const Home = () => {
     setSelectedCity('all');
   }, [activeTab]);
 
+  // Reset search query when switching tabs so filters are per-tab
+  useEffect(() => {
+    setSearchQuery('');
+  }, [activeTab]);
+
   const handleWholesalerUpdate = () => {
     setWholesaler(getWholesaler());
   };
@@ -140,6 +145,7 @@ const Home = () => {
           return (
             <div
               key={contact.id}
+              data-testid="contact-item"
               onClick={() => handleContactClick(contact)}
               className="flex cursor-pointer items-center gap-3 bg-card px-4 py-3 transition-colors hover:bg-muted/50 active:bg-muted"
             >
@@ -268,12 +274,13 @@ const Home = () => {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              data-testid="contacts-search-input"
             />
           </div>
           
           {uniqueCities.length > 0 && (
             <Select value={selectedCity} onValueChange={setSelectedCity}>
-              <SelectTrigger className="w-full bg-card">
+              <SelectTrigger className="w-full bg-card" data-testid="contacts-city-filter">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <SelectValue placeholder="All Cities" />
