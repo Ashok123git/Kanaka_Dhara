@@ -18,6 +18,7 @@ import {
 import { useAuth } from '@/auth/useAuth';
 import { updateMyWholesaler } from '@/api/wholesalers';
 import { saveWholesaler } from '@/lib/storage';
+import { gstNumberSchema, panNumberSchema } from '@/lib/validation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,8 +32,8 @@ const registerSchema = z.object({
   ownerName: z.string().min(2, 'Owner name must be at least 2 characters'),
   mobile: z.string().min(10, 'Enter a valid mobile number'),
   address: z.string().optional(),
-  gstNumber: z.string().optional(),
-  panNumber: z.string().optional(),
+  gstNumber: gstNumberSchema,
+  panNumber: panNumberSchema,
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;

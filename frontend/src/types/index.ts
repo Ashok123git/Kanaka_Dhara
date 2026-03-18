@@ -60,6 +60,11 @@ export type TransactionType =
   | 'debit_note'
   | 'opening_balance'
   | 'adjustment'
+  | 'order_received'
+  | 'goods_sent'
+  | 'payment_received'
+  | 'goods_returned'
+  | 'order_closed'
 
 export interface Transaction {
   id: string

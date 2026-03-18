@@ -108,3 +108,26 @@ export function clearAllData(): void {
     localStorage.removeItem(key);
   });
 }
+
+/**
+ * Mutable facade for Cypress stubbing.
+ * ESM named exports are not safely stub-able in Cypress component tests, so tests should stub
+ * methods on this object instead (e.g. cy.stub(storageApi, 'getOrders')).
+ */
+export const storageApi = {
+  getWholesaler,
+  saveWholesaler,
+  getContacts,
+  saveContacts,
+  addContact,
+  updateContact,
+  getTransactions,
+  saveTransactions,
+  addTransaction,
+  getTransactionsByContact,
+  getOrders,
+  saveOrders,
+  addOrder,
+  getOrdersByContact,
+  clearAllData,
+};

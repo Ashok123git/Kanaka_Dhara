@@ -1,0 +1,11 @@
+﻿{
+  " access_token\: \test-access-token\,
+ \refresh_token\: \test-refresh-token\,
+ \token_type\: \bearer\,
+ \user\: {
+ \id\: \1\,
+ \phone\: +911234567890,
+ \wholesalerId\: \wh-1\
+ },
+ \has_wholesaler\: true
+}

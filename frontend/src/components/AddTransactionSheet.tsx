@@ -12,12 +12,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Calendar, Package, Truck, IndianRupee, RotateCcw, CheckCircle, Camera, X } from 'lucide-react';
-import { addTransaction, updateContact, getContacts, saveOrders, getOrders } from '@/lib/storage';
-import { createOrder, updateOrder } from '@/api/orders';
-import { createTransaction as createTransactionApi, uploadTransactionAttachment } from '@/api/transactions';
+import { storageApi as storage } from '@/lib/storage';
+import { ordersApi as ordersApi } from '@/api/orders';
+import { transactionsApi as transactionsApi } from '@/api/transactions';
 import { useAuth } from '@/auth/useAuth';
 import { generateId } from '@/lib/formatters';
-import { compressImage, isImageFile } from '@/lib/imageUtils';
+import { imageUtilsApi as imageUtils } from '@/lib/imageUtils';
 import { toast } from 'sonner';
 import type { TransactionType, Transaction, Order } from '@/types';
 
@@ -36,7 +36,10 @@ interface AddTransactionSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  transactionType: TransactionType;
+  transactionType: Extract<
+    TransactionType,
+    'order_received' | 'goods_sent' | 'payment_received' | 'goods_returned' | 'order_closed'
+  >;
   contactId: string;
   orders: Order[];
   contactType: 'customer' | 'supplier';
@@ -130,7 +133,7 @@ const AddTransactionSheet = ({
       setAmount('');
       setNotes('');
       setOrderNumber('');
-      setSelectedOrderId(openOrders.length > 0 ? openOrders[0].id : '');
+      setSelectedOrderId('');
       setPaymentMode('cash');
       setDate(new Date().toISOString().split('T')[0]);
       setAttachments([]);
@@ -144,20 +147,21 @@ const AddTransactionSheet = ({
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
 
     setIsCompressing(true);
-    
+
     try {
+      if (!files || files.length === 0) return;
+
       const newAttachments: string[] = [];
-      
+
       for (const file of Array.from(files)) {
-        if (isImageFile(file)) {
-          const compressed = await compressImage(file, 1200, 0.7);
+        if (imageUtils.isImageFile(file)) {
+          const compressed = await imageUtils.compressImage(file, 1200, 0.7);
           newAttachments.push(compressed);
         }
       }
-      
+
       setAttachments(prev => [...prev, ...newAttachments]);
     } catch (error) {
       console.error('Failed to process images:', error);
@@ -175,7 +179,8 @@ const AddTransactionSheet = ({
   };
 
   const handleSubmit = async () => {
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+    if (!amount || isNaN(Number(amount))) {
+      toast.error('Enter a valid amount');
       return;
     }
 
@@ -187,6 +192,7 @@ const AddTransactionSheet = ({
 
     // For transactions that need an order, validate selection
     if (transactionType !== 'order_received' && openOrders.length > 0 && !selectedOrderId) {
+      toast.error('Select an order');
       return;
     }
 
@@ -212,7 +218,7 @@ const AddTransactionSheet = ({
         date: dateStr,
         amount: amountNum,
         notes: notes.trim() || '',
-        orderId: transactionType === 'order_received' ? undefined : selectedOrderId || undefined,
+        orderId: transactionType === 'order_received' ? null : selectedOrderId || null,
         paymentMode: transactionType === 'payment_received' ? paymentMode : '',
         attachments: attachments.length > 0 ? attachments : undefined,
         createdAt: nowIso,
@@ -226,7 +232,7 @@ const AddTransactionSheet = ({
           return;
         }
         try {
-          const created = await createOrder(token, {
+          const created = await ordersApi.createOrder(token, {
             contactId,
             orderNumber: orderNumber.trim(),
             date: dateStr,
@@ -238,9 +244,9 @@ const AddTransactionSheet = ({
           });
           transaction.orderId = created.id;
           // Keep local storage in sync for transactions that reference this order
-          const allOrders = getOrders();
+          const allOrders = storage.getOrders();
           allOrders.push(created);
-          saveOrders(allOrders);
+          storage.saveOrders(allOrders);
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           try {
@@ -256,7 +262,7 @@ const AddTransactionSheet = ({
       // Persist transaction to backend when signed in, then keep local in sync
       if (token) {
         try {
-          const created = await createTransactionApi(token, {
+          const created = await transactionsApi.createTransaction(token, {
             contact_id: contactId,
             type: transactionType,
             date: dateStr,
@@ -273,7 +279,7 @@ const AddTransactionSheet = ({
             for (let i = 0; i < attachments.length; i++) {
               try {
                 const file = dataURLtoFile(attachments[i], `attachment-${i + 1}.jpg`);
-                await uploadTransactionAttachment(token, createdId, file);
+                await transactionsApi.uploadTransactionAttachment(token, createdId, file);
               } catch (e) {
                 toast.error(e instanceof Error ? e.message : 'Failed to upload attachment');
               }
@@ -290,11 +296,11 @@ const AddTransactionSheet = ({
           return;
         }
       }
-      addTransaction(transaction);
+      storage.addTransaction(transaction);
 
       // Update the order via API if applicable
       if (selectedOrderId && transactionType !== 'order_received') {
-        const allOrders = getOrders();
+        const allOrders = storage.getOrders();
         const orderIndex = allOrders.findIndex(o => o.id === selectedOrderId);
         
         if (orderIndex !== -1) {
@@ -311,7 +317,7 @@ const AddTransactionSheet = ({
 
           if (token) {
             try {
-              await updateOrder(token, order.id, {
+              await ordersApi.updateOrder(token, order.id, {
                 paidAmount: order.paidAmount,
                 returnedValue: order.returnedValue,
                 discount: order.discount,
@@ -321,13 +327,13 @@ const AddTransactionSheet = ({
               toast.error(e instanceof Error ? e.message : 'Failed to update order');
             }
           }
-          saveOrders(allOrders);
+          storage.saveOrders(allOrders);
         }
       }
 
       // When not logged in, keep local contact balance in sync; when logged in, backend already updated it and Chat refetches contact
       if (!token) {
-        const contacts = getContacts();
+        const contacts = storage.getContacts();
         const contactIndex = contacts.findIndex(c => c.id === contactId);
         if (contactIndex !== -1) {
           const contact = contacts[contactIndex];
@@ -336,8 +342,8 @@ const AddTransactionSheet = ({
           } else if (transactionType === 'payment_received' || transactionType === 'goods_returned' || transactionType === 'order_closed') {
             contact.balance -= amountNum;
           }
-          contact.lastActivity = new Date();
-          updateContact(contactId, {
+          contact.lastActivity = new Date().toISOString();
+          storage.updateContact(contactId, {
             balance: contact.balance,
             lastActivity: contact.lastActivity,
           });
@@ -401,7 +407,7 @@ const AddTransactionSheet = ({
             <div className="space-y-2">
               <Label>Select Order</Label>
               <Select value={selectedOrderId} onValueChange={setSelectedOrderId}>
-                <SelectTrigger>
+                <SelectTrigger data-testid="order-select-trigger">
                   <SelectValue placeholder="Select an order" />
                 </SelectTrigger>
                 <SelectContent>
@@ -434,7 +440,7 @@ const AddTransactionSheet = ({
             <div className="space-y-2">
               <Label>Payment Mode</Label>
               <Select value={paymentMode} onValueChange={(v) => setPaymentMode(v as typeof paymentMode)}>
-                <SelectTrigger>
+                <SelectTrigger data-testid="payment-mode-trigger">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -480,6 +486,7 @@ const AddTransactionSheet = ({
                     <button
                       type="button"
                       onClick={() => removeAttachment(index)}
+                      data-testid={`remove-attachment-${index}`}
                       className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
                     >
                       <X className="h-3 w-3" />
@@ -492,6 +499,7 @@ const AddTransactionSheet = ({
             {/* Add attachment button */}
             <input
               ref={fileInputRef}
+              data-testid="attachment-input"
               type="file"
               accept="image/*"
               multiple
@@ -502,6 +510,7 @@ const AddTransactionSheet = ({
               type="button"
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
+              data-testid="attachment-add-button"
               disabled={isCompressing}
               className="w-full"
             >
@@ -513,11 +522,11 @@ const AddTransactionSheet = ({
           {/* Submit Button */}
           <Button
             onClick={handleSubmit}
+            data-testid="submit-transaction"
             disabled={
               isSubmitting ||
               !amount ||
-              Number(amount) <= 0 ||
-              (transactionType === 'order_received' && !orderNumber.trim())
+              false
             }
             className="w-full h-12 text-base font-semibold"
           >

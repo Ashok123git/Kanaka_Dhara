@@ -7,6 +7,20 @@ import { getOrders as getOrdersApi } from '@/api/orders';
 import { getTransactions as getTransactionsApi } from '@/api/transactions';
 import { formatCurrency, getInitials, formatDate } from '@/lib/formatters';
 import type { Contact, Transaction, Order } from '@/types';
+import TransactionBubble, { getTransactionTypeLabel } from '@/components/TransactionBubble';
+import TransactionActionMenu from '@/components/TransactionActionMenu';
+import AddTransactionSheet from '@/components/AddTransactionSheet';
+import EditContactSheet from '@/components/EditContactSheet';
+import AttachmentViewerDialog from '@/components/AttachmentViewerDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/auth/useAuth';
+import type { TransactionType } from '@/types';
+import { toast } from 'sonner';
 
 /** Ascending chronological order: oldest first (date, then createdAt). */
 function sortTransactionsChronological(txns: Transaction[]): void {
@@ -33,20 +47,6 @@ function balanceFromTransactions(txns: Transaction[]): number {
   }
   return balance;
 }
-import TransactionBubble, { getTransactionTypeLabel } from '@/components/TransactionBubble';
-import TransactionActionMenu from '@/components/TransactionActionMenu';
-import AddTransactionSheet from '@/components/AddTransactionSheet';
-import EditContactSheet from '@/components/EditContactSheet';
-import AttachmentViewerDialog from '@/components/AttachmentViewerDialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/auth/useAuth';
-import type { TransactionType } from '@/types';
-import { toast } from 'sonner';
 
 const Chat = () => {
   const { contactId } = useParams<{ contactId: string }>();
@@ -277,6 +277,7 @@ const Chat = () => {
               {/* Balance (derived from displayed transactions so header matches list) */}
               <div className="text-right mr-2">
                 <span
+                  data-testid="chat-header-balance"
                   className={`text-sm font-bold ${
                     headerBalance > 0
                       ? 'text-red-300'
@@ -309,6 +310,7 @@ const Chat = () => {
                     type="button"
                     className="p-2 text-primary-foreground hover:bg-primary-foreground/10 rounded-full transition-colors"
                     aria-label="More options"
+                    data-testid="chat-more-options"
                   >
                     <MoreVertical className="h-5 w-5" />
                   </button>

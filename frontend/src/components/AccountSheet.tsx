@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/form';
 import { updateMyWholesaler } from '@/api/wholesalers';
 import { saveWholesaler } from '@/lib/storage';
+import { gstNumberSchema, panNumberSchema } from '@/lib/validation';
 import { useAuth } from '@/auth/useAuth';
 import { toast } from 'sonner';
 import type { Wholesaler } from '@/types';
@@ -30,8 +31,8 @@ const accountSchema = z.object({
   ownerName: z.string().min(2, 'Owner name must be at least 2 characters'),
   mobile: z.string().min(10, 'Mobile number must be at least 10 digits'),
   address: z.string().min(5, 'Address must be at least 5 characters'),
-  gstNumber: z.string().optional(),
-  panNumber: z.string().optional(),
+  gstNumber: gstNumberSchema,
+  panNumber: panNumberSchema,
 });
 
 type AccountFormData = z.infer<typeof accountSchema>;

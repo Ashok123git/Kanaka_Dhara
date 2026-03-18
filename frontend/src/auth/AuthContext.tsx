@@ -32,7 +32,7 @@ export interface AuthState {
   hasWholesaler: boolean | null
 }
 
-interface AuthContextValue extends AuthState {
+export interface AuthContextValue extends AuthState {
   isAuthenticated: boolean
   setAuth: (token: string, user: AuthUser, hasWholesaler: boolean, refreshToken?: string) => void
   setTokensFromRefresh: (accessToken: string, refreshToken: string) => void
@@ -83,13 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setClearTokenFn(clearToken)
   }, [clearToken])
 
-  const callRefreshApi = useCallback(async (refreshTokenValue: string) => {
-    try {
-      return await refreshToken(refreshTokenValue)
-    } catch {
-      return null
-    }
-  }, [])
+  const callRefreshApi = useCallback(
+    (refreshTokenValue: string) => refreshToken(refreshTokenValue),
+    [],
+  )
 
   useEffect(() => {
     setAuthRefreshCallbacks({

@@ -60,3 +60,14 @@ export async function uploadTransactionAttachment(
   }
   return res.json()
 }
+
+/**
+ * Mutable facade for Cypress stubbing (ESM exports are not reliably stub-able).
+ * Example: cy.stub(transactionsApi, 'createTransaction').rejects(new Error('...'))
+ */
+export const transactionsApi = {
+  getTransactions,
+  getTransaction,
+  createTransaction,
+  uploadTransactionAttachment,
+};
