@@ -1,6 +1,6 @@
 import { Package, Truck, IndianRupee, RotateCcw, CheckCircle, Paperclip } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
-import type { Transaction, Order } from '@/types';
+import type { Transaction, Order, TransactionType } from '@/types';
 
 interface TransactionBubbleProps {
   transaction: Transaction;
@@ -8,6 +8,11 @@ interface TransactionBubbleProps {
   contactType: 'customer' | 'supplier';
   onBubbleClick?: () => void;
 }
+
+type LedgerTransactionType = Extract<
+  TransactionType,
+  'order_received' | 'goods_sent' | 'payment_received' | 'goods_returned' | 'order_closed'
+>;
 
 // Customer config: their actions come in, our actions go out
 const customerConfig = {
@@ -97,6 +102,21 @@ const supplierConfig = {
   },
 };
 
+const DEFAULT_TRANSACTION_TYPE: LedgerTransactionType = 'order_received';
+
+function toLedgerTransactionType(type: TransactionType): LedgerTransactionType {
+  const allowedTypes: LedgerTransactionType[] = [
+    'order_received',
+    'goods_sent',
+    'payment_received',
+    'goods_returned',
+    'order_closed',
+  ];
+  return allowedTypes.includes(type as LedgerTransactionType)
+    ? (type as LedgerTransactionType)
+    : DEFAULT_TRANSACTION_TYPE;
+}
+
 /** Returns the display label for a transaction type (for search/filter). */
 export function getTransactionTypeLabel(
   type: string,
@@ -116,7 +136,8 @@ const TransactionBubble = ({ transaction, orders, contactType, onBubbleClick }: 
 
   // Select config based on contact type
   const config = contactType === 'supplier' ? supplierConfig : customerConfig;
-  const currentConfig = config[type];
+  const ledgerType = toLedgerTransactionType(type);
+  const currentConfig = config[ledgerType];
   const Icon = currentConfig.icon;
 
   const hasAttachments = attachments && attachments.length > 0;

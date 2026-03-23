@@ -1,10 +1,15 @@
 import { X, Package, Truck, IndianRupee, RotateCcw, CheckCircle } from 'lucide-react';
 import type { TransactionType } from '@/types';
 
+type LedgerTransactionType = Extract<
+  TransactionType,
+  'order_received' | 'goods_sent' | 'payment_received' | 'goods_returned' | 'order_closed'
+>;
+
 interface TransactionActionMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (type: TransactionType) => void;
+  onSelect: (type: LedgerTransactionType) => void;
   contactType: 'customer' | 'supplier';
 }
 
@@ -12,7 +17,7 @@ const TransactionActionMenu = ({ isOpen, onClose, onSelect, contactType }: Trans
   if (!isOpen) return null;
 
   // Actions available based on contact type
-  const customerActions: { type: TransactionType; label: string; description: string; icon: React.ReactNode; color: string }[] = [
+  const customerActions: { type: LedgerTransactionType; label: string; description: string; icon: React.ReactNode; color: string }[] = [
     {
       type: 'order_received',
       label: 'Got the Order',
@@ -51,7 +56,7 @@ const TransactionActionMenu = ({ isOpen, onClose, onSelect, contactType }: Trans
   ];
 
   // For suppliers, the terminology is different
-  const supplierActions: { type: TransactionType; label: string; description: string; icon: React.ReactNode; color: string }[] = [
+  const supplierActions: { type: LedgerTransactionType; label: string; description: string; icon: React.ReactNode; color: string }[] = [
     {
       type: 'order_received',
       label: 'Placed Order',

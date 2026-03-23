@@ -8,12 +8,20 @@ import {
 } from './storage';
 import { generateId } from './formatters';
 
-// Helper to create dates relative to today
-function daysAgo(days: number): Date {
+// Helper to create ISO date strings relative to today
+function daysAgo(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() - days);
-  return date;
+  return date.toISOString();
 }
+
+const SEED_WHOLESALER_ID = 'seed_wholesaler_001';
+
+type SeedContact = Omit<Contact, 'wholesalerId' | 'gstNumber' | 'notes' | 'updatedAt'> &
+  Partial<Pick<Contact, 'gstNumber'>>;
+type SeedOrder = Omit<Order, 'wholesalerId' | 'updatedAt'>;
+type SeedTransaction = Omit<Transaction, 'wholesalerId' | 'paymentMode' | 'updatedAt'> &
+  Partial<Pick<Transaction, 'paymentMode'>>;
 
 // Wholesaler - Gayathri Handlooms
 const gayathriHandlooms: Wholesaler = {
@@ -23,8 +31,10 @@ const gayathriHandlooms: Wholesaler = {
   mobile: '9848012345',
   address: '23, T. Nagar Main Road, Chennai - 600017',
   gstNumber: '33AABCU9603R1ZM',
+  panNumber: '',
   tradeCreditDays: 30,
   createdAt: daysAgo(365),
+  updatedAt: daysAgo(365),
 };
 
 // Customer IDs for transaction linking
@@ -48,7 +58,7 @@ const supplierIds = {
 };
 
 // Customers (8)
-const customers: Contact[] = [
+const customers: SeedContact[] = [
   {
     id: customerIds.lakshmiSilks,
     type: 'customer',
@@ -150,7 +160,7 @@ const customers: Contact[] = [
 ];
 
 // Suppliers (5)
-const suppliers: Contact[] = [
+const suppliers: SeedContact[] = [
   {
     id: supplierIds.kanchiWeavers,
     type: 'supplier',
@@ -224,7 +234,7 @@ const orderIds = {
 };
 
 // Sample Orders
-const sampleOrders: Order[] = [
+const sampleOrders: SeedOrder[] = [
   {
     id: orderIds.lakshmi_order1,
     contactId: customerIds.lakshmiSilks,
@@ -276,7 +286,7 @@ const sampleOrders: Order[] = [
 ];
 
 // Sample Transactions
-const sampleTransactions: Transaction[] = [
+const sampleTransactions: SeedTransaction[] = [
   // Lakshmi Silks transactions
   {
     id: generateId(),
@@ -429,13 +439,31 @@ export function seedTestData(): void {
   saveWholesaler(gayathriHandlooms);
 
   // Seed all contacts
-  saveContacts([...customers, ...suppliers]);
+  const contactsToSeed: Contact[] = [...customers, ...suppliers].map((contact) => ({
+    wholesalerId: SEED_WHOLESALER_ID,
+    gstNumber: '',
+    notes: '',
+    updatedAt: contact.createdAt,
+    ...contact,
+  }));
+  saveContacts(contactsToSeed);
 
   // Seed transactions
-  saveTransactions(sampleTransactions);
+  const transactionsToSeed: Transaction[] = sampleTransactions.map((transaction) => ({
+    wholesalerId: SEED_WHOLESALER_ID,
+    paymentMode: '',
+    updatedAt: transaction.createdAt,
+    ...transaction,
+  }));
+  saveTransactions(transactionsToSeed);
 
   // Seed orders
-  saveOrders(sampleOrders);
+  const ordersToSeed: Order[] = sampleOrders.map((order) => ({
+    wholesalerId: SEED_WHOLESALER_ID,
+    updatedAt: order.createdAt,
+    ...order,
+  }));
+  saveOrders(ordersToSeed);
 
   console.log('✅ Test data seeded successfully - Gayathri Handlooms');
 }

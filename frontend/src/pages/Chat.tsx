@@ -22,6 +22,11 @@ import { useAuth } from '@/auth/useAuth';
 import type { TransactionType } from '@/types';
 import { toast } from 'sonner';
 
+type LedgerTransactionType = Extract<
+  TransactionType,
+  'order_received' | 'goods_sent' | 'payment_received' | 'goods_returned' | 'order_closed'
+>;
+
 /** Ascending chronological order: oldest first (date, then createdAt). */
 function sortTransactionsChronological(txns: Transaction[]): void {
   txns.sort((a, b) => {
@@ -60,7 +65,7 @@ const Chat = () => {
   const [loading, setLoading] = useState(true);
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isEditContactSheetOpen, setIsEditContactSheetOpen] = useState(false);
-  const [selectedTransactionType, setSelectedTransactionType] = useState<TransactionType | null>(null);
+  const [selectedTransactionType, setSelectedTransactionType] = useState<LedgerTransactionType | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   
   // Attachment viewer state
@@ -156,7 +161,7 @@ const Chat = () => {
     }
   }, [token, contactId]);
 
-  const handleActionSelect = (type: TransactionType) => {
+  const handleActionSelect = (type: LedgerTransactionType) => {
     setSelectedTransactionType(type);
     setIsActionMenuOpen(false);
     setIsFormOpen(true);

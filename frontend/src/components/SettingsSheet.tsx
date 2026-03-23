@@ -26,7 +26,7 @@ import { updateMyWholesaler } from '@/api/wholesalers';
 
 const settingsSchema = z.object({
   tradeCreditDays: z
-    .number({ invalid_type_error: 'Please enter a number' })
+    .number()
     .min(1, 'Minimum 1 day')
     .max(100, 'Maximum 100 days'),
 });
@@ -74,7 +74,6 @@ const SettingsSheet = ({ isOpen, onClose, onSuccess, wholesaler }: SettingsSheet
           address: wholesaler.address,
           gstNumber: wholesaler.gstNumber || undefined,
           panNumber: wholesaler.panNumber || undefined,
-          status: 'active',
           tradeCreditDays: data.tradeCreditDays,
         });
       } catch {

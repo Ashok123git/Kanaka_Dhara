@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MoreVertical, Users, Truck, BarChart3, Building2, MapPin, ChevronDown, LogOut } from 'lucide-react';
+import { Search, MoreVertical, Users, Truck, BarChart3, Building2, MapPin, LogOut } from 'lucide-react';
 import { getWholesaler } from '@/lib/storage';
 import { getContacts as getContactsApi } from '@/api/contacts';
 import { formatCurrency, formatDate, getInitials } from '@/lib/formatters';
