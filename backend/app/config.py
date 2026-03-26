@@ -3,6 +3,7 @@ from typing import List
 
 from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 
 
 class Settings(BaseSettings):
@@ -31,6 +32,20 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> List[str]:
         """Origins for CORS (no trailing slash) so they match the browser Origin header exactly."""
         return [str(AnyHttpUrl(u.strip())).rstrip("/") for u in self.CORS_ORIGINS.split(",") if u.strip()]
+
+    @model_validator(mode="after")
+    def _normalize_database_url(self) -> "Settings":
+        """
+        Render (and some other providers) supply `DATABASE_URL` as `postgres://...` or `postgresql://...`.
+        For SQLAlchemy async we need an explicit async driver: `postgresql+asyncpg://...`.
+        """
+        url = (self.DATABASE_URL or "").strip()
+        if url.startswith("postgres://"):
+            url = "postgresql://" + url[len("postgres://") :]
+        if url.startswith("postgresql://") and "+asyncpg" not in url.split("://", 1)[0]:
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        self.DATABASE_URL = url
+        return self
 
     class Config:
         env_file = ".env"
