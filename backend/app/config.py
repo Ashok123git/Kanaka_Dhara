@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/kanaka_dhara"
     TEST_DATABASE_URL: str | None = None  # Dedicated test DB, e.g. .../kanaka_dhara_test
     SECRET_KEY: str = "CHANGE_ME_SECRET_KEY"
+    AUTO_CREATE_DB_SCHEMA: bool = True
     # Str from .env (comma-separated); use .cors_origins_list for middleware
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 

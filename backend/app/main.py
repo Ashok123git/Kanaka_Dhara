@@ -16,6 +16,7 @@ logging.basicConfig(
 )
 logging.getLogger("api.v1.auth").setLevel(logging.INFO)
 logging.getLogger("services.sms").setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
 from api.v1.router import api_v1_router
 from db.base import Base
 from db.session import engine
@@ -33,11 +34,21 @@ from db.models import (  # noqa: F401 - register with Base.metadata
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create tables if they do not exist (dev convenience; use migrations in production)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    # Ensure upload directory exists for transaction attachments
-    Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
+    try:
+        # Ensure upload directory exists for transaction attachments
+        Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
+
+        # Create tables if they do not exist (dev convenience; disable in production)
+        if settings.AUTO_CREATE_DB_SCHEMA:
+            logger.info("AUTO_CREATE_DB_SCHEMA enabled; creating DB tables if missing")
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+        else:
+            logger.info("AUTO_CREATE_DB_SCHEMA disabled; skipping Base.metadata.create_all()")
+    except Exception:
+        # This makes Render show a clear reason in logs instead of just "Exited with status 1"
+        logger.exception("Application startup failed during lifespan initialization")
+        raise
     yield
 
 
