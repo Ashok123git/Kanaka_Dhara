@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, MoreVertical, Users, Truck, BarChart3, Building2, MapPin, LogOut } from 'lucide-react';
 import { getWholesaler } from '@/lib/storage';
 import { getContacts as getContactsApi } from '@/api/contacts';
+import { isRequestAbortedError } from '@/api/client';
 import { formatCurrency, formatDate, getInitials } from '@/lib/formatters';
 import type { Wholesaler, Contact } from '@/types';
 
@@ -61,6 +62,9 @@ const Home = () => {
       const list = await getContactsApi(token);
       setContacts(list);
     } catch (e) {
+      if (isRequestAbortedError(e)) {
+        return;
+      }
       toast.error(e instanceof Error ? e.message : 'Failed to load contacts');
       setContacts([]);
     } finally {

@@ -5,6 +5,7 @@ import { getTransactionsByContact } from '@/lib/storage';
 import { getContact as getContactApi } from '@/api/contacts';
 import { getOrders as getOrdersApi } from '@/api/orders';
 import { getTransactions as getTransactionsApi } from '@/api/transactions';
+import { isRequestAbortedError } from '@/api/client';
 import { formatCurrency, getInitials, formatDate } from '@/lib/formatters';
 import type { Contact, Transaction, Order } from '@/types';
 import TransactionBubble, { getTransactionTypeLabel } from '@/components/TransactionBubble';
@@ -120,6 +121,9 @@ const Chat = () => {
         }
       } catch (e) {
         if (!cancelled) {
+          if (isRequestAbortedError(e)) {
+            return;
+          }
           toast.error(e instanceof Error ? e.message : 'Failed to load contact');
           navigate('/home', { replace: true });
         }
@@ -146,7 +150,10 @@ const Chat = () => {
     try {
       const list = await getOrdersApi(token, contactId);
       setOrders(list);
-    } catch {
+    } catch (e) {
+      if (isRequestAbortedError(e)) {
+        return;
+      }
       setOrders([]);
     }
   }, [token, contactId]);
@@ -156,7 +163,10 @@ const Chat = () => {
     try {
       const c = await getContactApi(token, contactId);
       setContact(c);
-    } catch {
+    } catch (e) {
+      if (isRequestAbortedError(e)) {
+        return;
+      }
       setContact(null);
     }
   }, [token, contactId]);

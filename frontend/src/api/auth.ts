@@ -2,7 +2,7 @@
  * Auth API: sendOtp, verifyOtp, refresh, logout (client-side clear).
  */
 
-import { apiFetch, getBaseUrl } from './client'
+import { apiFetch, getBaseUrl, isRequestAbortedError } from './client'
 import type { RefreshTokenResponse, VerifyOtpResponse } from '@/types'
 
 export interface SendOtpBody {
@@ -80,9 +80,12 @@ export async function sendOtp(body: SendOtpBody): Promise<SendOtpResponse> {
     return data
   } catch (err) {
     if (err instanceof Error) {
-      if (err.name === 'AbortError') {
+      if (isRequestAbortedError(err)) {
         console.error('[sendOtp] request timed out', { url })
-        throw new Error('Request timed out. Make sure the backend is running at ' + getBaseUrl())
+        if (err.isTimeout) {
+          throw new Error('Request timed out. Make sure the backend is running at ' + getBaseUrl())
+        }
+        throw new Error('Request was cancelled. Please try again.')
       }
       if (err.message === 'Failed to fetch' || err instanceof TypeError) {
         console.error('[sendOtp] network error', { url, message: err.message })
@@ -109,6 +112,12 @@ export async function verifyOtp(body: VerifyOtpBody): Promise<VerifyOtpResponse>
     }
     return JSON.parse(text) as VerifyOtpResponse
   } catch (err) {
+    if (isRequestAbortedError(err)) {
+      if (err.isTimeout) {
+        throw new Error('Verification timed out. Please try again.')
+      }
+      throw new Error('Verification was cancelled. Please try again.')
+    }
     if (err instanceof TypeError || (err instanceof Error && err.message === 'Failed to fetch')) {
       throw new Error('Could not reach server. Check your connection.')
     }

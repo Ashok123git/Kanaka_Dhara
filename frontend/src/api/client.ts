@@ -35,8 +35,22 @@ export function getBaseUrl(): string {
   return BASE_URL.replace(/\/$/, '')
 }
 
-const DEFAULT_REQUEST_TIMEOUT_MS = 20_000
+const DEFAULT_REQUEST_TIMEOUT_MS = 60_000
 const REFRESH_PATH = '/api/v1/auth/refresh'
+
+export class ApiRequestAbortedError extends Error {
+  readonly isTimeout: boolean
+
+  constructor(message: string, isTimeout: boolean) {
+    super(message)
+    this.name = 'ApiRequestAbortedError'
+    this.isTimeout = isTimeout
+  }
+}
+
+export function isRequestAbortedError(error: unknown): error is ApiRequestAbortedError {
+  return error instanceof ApiRequestAbortedError
+}
 
 /** Single in-flight refresh; shared so concurrent 401s do not trigger multiple refreshes. */
 let refreshPromise: Promise<string | null> | null = null
@@ -71,20 +85,47 @@ export async function apiFetch(
   options: RequestInit & { token?: string | null; timeoutMs?: number } = {},
 ): Promise<Response> {
   const { token, timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS, ...init } = options
+  const callerSignal = init.signal
+  const { signal: _ignoredSignal, ...requestInit } = init
   const url = path.startsWith('http') ? path : `${getBaseUrl()}${path.startsWith('/') ? '' : '/'}${path}`
-  const headers = new Headers(init.headers)
+  const headers = new Headers(requestInit.headers)
   if (token) {
     headers.set('Authorization', `Bearer ${token}`)
   }
-  if (!(init.body instanceof FormData)) {
+  if (!(requestInit.body instanceof FormData)) {
     headers.set('Content-Type', headers.get('Content-Type') ?? 'application/json')
   }
 
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  let didTimeout = false
+  const timeoutId = setTimeout(() => {
+    didTimeout = true
+    controller.abort(new DOMException(`Request timed out after ${timeoutMs}ms`, 'TimeoutError'))
+  }, timeoutMs)
+  if (callerSignal) {
+    if (callerSignal.aborted) {
+      controller.abort(callerSignal.reason ?? new DOMException('Request aborted by caller', 'AbortError'))
+    } else {
+      callerSignal.addEventListener(
+        'abort',
+        () => {
+          controller.abort(callerSignal.reason ?? new DOMException('Request aborted by caller', 'AbortError'))
+        },
+        { once: true },
+      )
+    }
+  }
   let res: Response
   try {
-    res = await fetch(url, { ...init, headers, signal: controller.signal })
+    res = await fetch(url, { ...requestInit, headers, signal: controller.signal })
+  } catch (error) {
+    if (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'TimeoutError')) {
+      const message = didTimeout
+        ? `Request timed out after ${timeoutMs}ms`
+        : 'Request was cancelled'
+      throw new ApiRequestAbortedError(message, didTimeout)
+    }
+    throw error
   } finally {
     clearTimeout(timeoutId)
   }
